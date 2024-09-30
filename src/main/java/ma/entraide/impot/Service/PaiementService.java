@@ -91,14 +91,22 @@ public class PaiementService {
         int year = localDate.getYear();
         String periode = month +"/"+year;
 
-        //pourcentage ras
-        double brutAnnuel = bruteMensuel * 12;
-        int rasP = calcPourcentageRAS(brutAnnuel, isPersonnemoral(local.getProprietaires()));
-        //montant de ras
-        double ras = Math.ceil(calcRAS(bruteMensuel,rasP));
+        //
+        int rasP = 0;
+        double ras = 0;
+        double mtNet = 0;
 
-        //montant net
-        double mtNet = bruteMensuel-ras;
+        if(local.getEtat().equals("actif") || local.getEtat().equals("résilié")){
+            //pourcentage ras
+            double brutAnnuel = bruteMensuel * 12;
+             rasP = calcPourcentageRAS(brutAnnuel, isPersonnemoral(local.getProprietaires()));
+            //montant de ras
+             ras = Math.ceil(calcRAS(bruteMensuel,rasP));
+
+            //montant net
+             mtNet = bruteMensuel-ras;
+        }
+
 
         return new Paiement(date, month, year, periode, bruteMensuel, rasP, ras, mtNet, local);
     }
@@ -106,7 +114,7 @@ public class PaiementService {
     public byte[] payerEnMasse(List<Local> local, Date date) throws IOException {
         List<Paiement> paiements = new ArrayList<>();
         for (Local l : local) {
-            paiements.add(payerLocal(l, date));
+                paiements.add(payerLocal(l, date));
         }
         return generatePdfEtat(paiements);
     }

@@ -25,7 +25,6 @@ public class Proprietaire {
 
     private String telephone;
 
-    private String etat;
 
     private String type;
 

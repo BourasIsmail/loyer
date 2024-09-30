@@ -66,18 +66,25 @@ public class PaiementController {
     }
 
     @PostMapping("/paiements")
-    public ResponseEntity<byte[]> payer(@RequestBody PayerRequest request) throws IOException {
-        byte[] result = paiementService.payerEnMasse(request.getLocals(), request.getDate());
+    public ResponseEntity<byte[]> payer(@RequestBody PayerRequest request)  {
+        try {
+            byte[] result = paiementService.payerEnMasse(request.getLocals(), request.getDate());
 
-        // Set headers for download
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDispositionFormData("attachment", "etat.pdf");
-        headers.setContentLength(result.length);
+            // Set headers for download
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", "etat.pdf");
+            headers.setContentLength(result.length);
 
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body(result);
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(result);
+        }
+        catch (Exception e) {
+            System.out.println(e);
+            return ResponseEntity.notFound().build();
+        }
+
     }
 
     @GetMapping("/all")

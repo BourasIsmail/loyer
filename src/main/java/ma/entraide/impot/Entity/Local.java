@@ -33,6 +33,11 @@ public class Local {
 
     private float brutMensuel;
 
+    @Column(length = 24)
+    private String rib;
+
+    private String etat;
+
     @Lob
     @Column(columnDefinition = "longblob")
     private byte[] contrat;

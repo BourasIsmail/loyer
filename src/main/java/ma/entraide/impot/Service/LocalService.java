@@ -7,6 +7,7 @@ import ma.entraide.impot.Repository.LocalRepo;
 import ma.entraide.impot.Repository.ProprieteRepo;
 import ma.entraide.impot.Repository.ProvinceRepo;
 import ma.entraide.impot.Repository.TscRepo;
+import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
@@ -41,7 +42,9 @@ public class LocalService {
     }
 
     public Local addLocal(Local local) {
-
+        if(local.getRib().length()<24){
+            throw new IllegalArgumentException();
+        }
         Province province = provinceService.getProvinceById(local.getProvince().getId());
         local.setProvince(province);
 
@@ -67,6 +70,8 @@ public class LocalService {
         }
         newLocal.setProprietaires(proprietairesNew);
         newLocal.setAdresse(local.getAdresse());
+        newLocal.setRib(local.getRib());
+        newLocal.setEtat(local.getEtat());
         newLocal.setBrutMensuel(local.getBrutMensuel());
         return localRepo.save(newLocal);
     }

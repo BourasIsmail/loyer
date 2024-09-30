@@ -40,21 +40,16 @@ public class PdfGenerator {
         Image img = new Image(imgData);
 
         document.add(img);
+        Paiement pm = paiements.get(0);
 
-        String titre = "Service du budget";
-        Text t = new Text(titre);
-        t.setUnderline();
-        Paragraph para = new Paragraph(t);
-        para.setTextAlignment(TextAlignment.CENTER);
-        document.add(para);
 
-        Text t2 = new Text("ETAT DES LOYERS");
+        Text t2 = new Text("ETAT DES LOYERS du mois "+pm.getMoisAnnee());
         t2.setFont(font);
         Paragraph para1 = new Paragraph(t2);
         para1.setTextAlignment(TextAlignment.CENTER);
         document.add(para1);
 
-        Paiement pm = paiements.get(0);
+
         String sousTitre = " COORDINATION DE " +pm.getLocal().getProvince().getRegion().getName();
         Text text = new Text(sousTitre);
         text.setFont(font);
@@ -62,11 +57,11 @@ public class PdfGenerator {
         para2.setTextAlignment(TextAlignment.CENTER);
         document.add(para2);
 
-        float [] pointColumnWidths = {100F, 50F, 100F, 50F, 50F, 50F, 50F};
+        float [] pointColumnWidths = {100F, 150F, 50F, 50F, 50F, 50F, 50F};
         Table table = new Table(pointColumnWidths);
 
         table.addCell(new Cell().add(new Paragraph("Nom et Prenom")));
-        table.addCell(new Cell().add(new Paragraph("Etat du Proprietaire")));
+        table.addCell(new Cell().add(new Paragraph("RIB")));
         table.addCell(new Cell().add(new Paragraph("Delegation")));
         table.addCell(new Cell().add(new Paragraph("Taux de RAS")));
         table.addCell(new Cell().add(new Paragraph("Montant brute")));
@@ -77,21 +72,23 @@ public class PdfGenerator {
         double totalBrute = 0;
         double totalRas = 0;
         for(Paiement paiement: paiements) {
-            totalNet += paiement.getNetMensuel();
-            totalBrute += paiement.getBruteMensuel();
-            totalRas += paiement.getRas();
-            StringBuilder nomComplet = new StringBuilder();
-            for(Proprietaire p : paiement.getLocal().getProprietaires()){
-                nomComplet.append(p.getNomComplet()).append(" ");
+            if (paiement.getLocal().getEtat().equals("actif")) {
+                totalNet += paiement.getNetMensuel();
+                totalBrute += paiement.getBruteMensuel();
+                totalRas += paiement.getRas();
+                StringBuilder nomComplet = new StringBuilder();
+                for (Proprietaire p : paiement.getLocal().getProprietaires()) {
+                    nomComplet.append(p.getNomComplet()).append(" ");
+                }
+                Proprietaire p1 = paiement.getLocal().getProprietaires().get(0);
+                table.addCell(new Cell().add(new Paragraph(String.valueOf(nomComplet))));
+                table.addCell(new Cell().add(new Paragraph(paiement.getLocal().getRib())));
+                table.addCell(new Cell().add(new Paragraph(String.valueOf(paiement.getLocal().getProvince().getName()))));
+                table.addCell(new Cell().add(new Paragraph(String.valueOf(paiement.getPourcentageRAS()) + " %")));
+                table.addCell(new Cell().add(new Paragraph(String.valueOf(paiement.getBruteMensuel()))));
+                table.addCell(new Cell().add(new Paragraph(String.valueOf(paiement.getRas()))));
+                table.addCell(new Cell().add(new Paragraph(String.valueOf(paiement.getNetMensuel()))));
             }
-            Proprietaire p1 = paiement.getLocal().getProprietaires().get(0);
-            table.addCell(new Cell().add(new Paragraph(String.valueOf(nomComplet))));
-            table.addCell(new Cell().add(new Paragraph(p1.getEtat())));
-            table.addCell(new Cell().add(new Paragraph(String.valueOf(paiement.getLocal().getProvince().getName()))));
-            table.addCell(new Cell().add(new Paragraph(String.valueOf(paiement.getPourcentageRAS())+ " %")));
-            table.addCell(new Cell().add(new Paragraph(String.valueOf(paiement.getBruteMensuel()))));
-            table.addCell(new Cell().add(new Paragraph(String.valueOf(paiement.getRas()))));
-            table.addCell(new Cell().add(new Paragraph(String.valueOf(paiement.getNetMensuel()))));
         }
         table.addCell(new Cell().add(new Paragraph("")));
         table.addCell(new Cell().add(new Paragraph("")));

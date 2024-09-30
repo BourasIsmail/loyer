@@ -51,6 +51,37 @@ public class LocalController {
         return ResponseEntity.ok(locaux);
     }
 
+    @PostMapping("/add")
+    public ResponseEntity<Local> add(@RequestBody Local local){
+        try {
+            Local newLocal =localService.addLocal(local);
+            return ResponseEntity.ok(newLocal);
+        }catch (Exception e){
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PutMapping("/update/{id}")
+    public ResponseEntity<Local> update(@PathVariable Long id, @RequestBody Local local){
+        try {
+            Local result = localService.updateLocal(id, local);
+            return ResponseEntity.ok(result);
+        }catch (Exception e){
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<String> delete(@PathVariable Long id){
+        try {
+            String result = localService.deleteLocal(id);
+            return ResponseEntity.ok(result);
+        }
+        catch (Exception e){
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 
 
 }
