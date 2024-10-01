@@ -2,6 +2,7 @@ package ma.entraide.impot.Service;
 
 import ma.entraide.impot.Entity.Proprietaire;
 import ma.entraide.impot.Entity.Province;
+import ma.entraide.impot.Entity.Rib;
 import ma.entraide.impot.Repository.ProprieteRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
@@ -16,6 +17,9 @@ import java.util.Optional;
 public class ProprieteService {
     @Autowired
     private ProprieteRepo proprieteRepo;
+
+    @Autowired
+    private RibService ribService;
 
     @Autowired
     private ProvinceService provinceService;
@@ -37,6 +41,10 @@ public class ProprieteService {
     public Proprietaire add(Proprietaire proprietaire) {
         Province province = provinceService.getProvinceById(proprietaire.getProvince().getId());
         proprietaire.setProvince(province);
+        List<Rib> ribs = ribService.addRibs(proprietaire.getRib());
+
+
+
         return proprieteRepo.save(proprietaire);
     }
 

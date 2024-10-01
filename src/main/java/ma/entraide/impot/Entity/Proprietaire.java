@@ -30,16 +30,7 @@ public class Proprietaire {
 
     private String adresse;
 
-    @ManyToMany(cascade ={
-            CascadeType.DETACH,
-            CascadeType.MERGE,
-            CascadeType.REFRESH,
-            CascadeType.PERSIST,
-    } )
-    @JoinTable(
-            name = "proprietaire_rib",
-            joinColumns = @JoinColumn(name = "proprietaire_id"),
-            inverseJoinColumns = @JoinColumn(name = "rib"))
+    @OneToMany(cascade ={CascadeType.DETACH} )
     private List<Rib> rib;
 
 
