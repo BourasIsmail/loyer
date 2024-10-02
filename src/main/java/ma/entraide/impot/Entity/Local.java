@@ -31,9 +31,8 @@ public class Local {
 
     private String adresse;
 
-    private float brutMensuel;
+    private double brutMensuel;
 
-    @Column(length = 24)
     private String rib;
 
     private String etat;
