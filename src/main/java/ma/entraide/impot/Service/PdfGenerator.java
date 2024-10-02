@@ -5,10 +5,12 @@ import com.itextpdf.io.image.ImageData;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.*;
+import com.itextpdf.layout.properties.HorizontalAlignment;
 import com.itextpdf.layout.properties.TextAlignment;
 import ma.entraide.impot.Entity.Paiement;
 import ma.entraide.impot.Entity.Proprietaire;
@@ -28,6 +30,8 @@ public class PdfGenerator {
         // Create a PdfDocument object
         PdfDocument pdfDocument = new PdfDocument(pdfWriter);
 
+        pdfDocument.setDefaultPageSize(PageSize.A4.rotate());
+
         // Create a Document object
         Document document = new Document(pdfDocument);
 
@@ -38,7 +42,8 @@ public class PdfGenerator {
 
         // Creating an Image object
         Image img = new Image(imgData);
-
+        // Set the image alignment to center
+        img.setMarginLeft(80);
         document.add(img);
         Paiement pm = paiements.get(0);
 
