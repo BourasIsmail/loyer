@@ -55,7 +55,7 @@ public class ProprieteService {
         p.setNomComplet(proprietaire.getNomComplet());
         p.setCin(proprietaire.getCin());
         p.setTelephone(proprietaire.getTelephone());
-        p.setRib(proprietaire.getRib());
+        p.setType(proprietaire.getType());
         p.setAdresse(proprietaire.getAdresse());
         return proprieteRepo.save(p);
     }

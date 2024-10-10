@@ -18,10 +18,10 @@ public class NombreEnLettres {
         long partieEntiere = (long) nombre;
         int partieDecimale = (int) Math.round((nombre - partieEntiere) * 100); // convertir la partie décimale en centièmes
 
-        String result = convertNombre(partieEntiere) + " dirhams";
+        String result = convertNombre(partieEntiere) + " dirhams ";
 
         if (partieDecimale > 0) {
-            result +=   convertNombre(partieDecimale) + "centimes";
+            result +=   convertNombre(partieDecimale) + " centimes ";
         }
 
         return result;

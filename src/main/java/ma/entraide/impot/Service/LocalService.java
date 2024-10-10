@@ -11,6 +11,8 @@ import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -93,5 +95,40 @@ public class LocalService {
         return localRepo.findByRegionId(id);
     }
 
+    public Local uploadContact(Long id , MultipartFile file){
+        String fileName = StringUtils.cleanPath(file.getOriginalFilename());
+        try{
+            if(fileName.contains("..")){
+                throw new Exception("Filemane contains invalid path sequence"
+                        + fileName);
+            }
+            Local local = getById(id);
+            local.setFileName(fileName);
+            local.setFileType(file.getContentType());
+            local.setContrat(file.getBytes());
+            return localRepo.save(local);
+        }catch (Exception e){
+            throw new ResourceNotFoundException("File not uploaded"+fileName);
+        }
+    }
+
+    public Object dashboard(){
+        Object data = new Object(){
+            public long totalLocaux = localRepo.count();
+            public long locauxIncomplet = localRepo.countIncompleteData();
+            public long localComplet = totalLocaux - locauxIncomplet;
+
+            public long localActif = localRepo.countEtatActif();
+            public long  localResilie = localRepo.countEtatResilie();
+            public long localSuspendue = localRepo.countEtatSuspendue();
+
+            public long totalProprietaire = localRepo.countProprietaires();
+            public long proprietaireIncomplet = localRepo.countProprietairesIncomplete();
+            public long proprietaireComplet = totalProprietaire - proprietaireIncomplet;
+            public long personnesMorale = localRepo.countPersonnesMorale();
+            public long personnesPhysique = localRepo.countPersonnesPhysique();
+        };
+        return data;
+    }
 
 }

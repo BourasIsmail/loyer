@@ -38,12 +38,17 @@ public class Local {
     private String etat;
 
     @Lob
-    @Column(columnDefinition = "longblob")
+    @Column(columnDefinition = "longblob" , nullable = true)
     private byte[] contrat;
+
+    private String fileName;
+
+    private String fileType;
 
     @ManyToOne(cascade = CascadeType.DETACH)
     @JoinColumn(name = "province_id")
     private Province province;
+
 
 
 }

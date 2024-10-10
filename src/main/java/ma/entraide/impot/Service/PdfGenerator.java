@@ -62,20 +62,20 @@ public class PdfGenerator {
         para2.setTextAlignment(TextAlignment.CENTER);
         document.add(para2);
 
-        float [] pointColumnWidths = {100F, 150F, 50F, 50F, 50F, 50F, 50F};
+        float [] pointColumnWidths = {200F, 120F, 80, 80F, 80F, 80F};
         Table table = new Table(pointColumnWidths);
 
-        table.addCell(new Cell().add(new Paragraph("Nom et Prenom")));
-        table.addCell(new Cell().add(new Paragraph("RIB")));
-        table.addCell(new Cell().add(new Paragraph("Delegation")));
+        table.addCell(new Cell().add(new Paragraph("Nom et Prénom")));
+        //table.addCell(new Cell().add(new Paragraph("RIB")));
+        table.addCell(new Cell().add(new Paragraph("Délégation")));
         table.addCell(new Cell().add(new Paragraph("Taux de RAS")));
-        table.addCell(new Cell().add(new Paragraph("Montant brute")));
+        table.addCell(new Cell().add(new Paragraph("Montant brut")));
         table.addCell(new Cell().add(new Paragraph("RAS")));
         table.addCell(new Cell().add(new Paragraph("Montant Net")));
 
-        double totalNet= 0;
-        double totalBrute = 0;
-        double totalRas = 0;
+        double totalNet= 0.00;
+        double totalBrute = 0.00;
+        double totalRas = 0.00;
         for(Paiement paiement: paiements) {
             if (paiement.getLocal().getEtat().equals("actif")) {
                 totalNet += paiement.getNetMensuel();
@@ -87,25 +87,26 @@ public class PdfGenerator {
                 }
                 Proprietaire p1 = paiement.getLocal().getProprietaires().get(0);
                 table.addCell(new Cell().add(new Paragraph(String.valueOf(nomComplet))));
-                table.addCell(new Cell().add(new Paragraph(paiement.getLocal().getRib())));
+               // table.addCell(new Cell().add(new Paragraph(paiement.getLocal().getRib())));
                 table.addCell(new Cell().add(new Paragraph(String.valueOf(paiement.getLocal().getProvince().getName()))));
                 table.addCell(new Cell().add(new Paragraph(String.valueOf(paiement.getPourcentageRAS()) + " %")));
-                table.addCell(new Cell().add(new Paragraph(String.valueOf(paiement.getBruteMensuel()))));
-                table.addCell(new Cell().add(new Paragraph(String.valueOf(paiement.getRas()))));
-                table.addCell(new Cell().add(new Paragraph(String.valueOf(paiement.getNetMensuel()))));
+                table.addCell(new Cell().add(new Paragraph(String.format("%.2f",paiement.getBruteMensuel()))));
+                table.addCell(new Cell().add(new Paragraph(String.format("%.2f",paiement.getRas()))));
+                table.addCell(new Cell().add(new Paragraph(String.format("%.2f",paiement.getNetMensuel()))));
             }
         }
         table.addCell(new Cell().add(new Paragraph("")));
         table.addCell(new Cell().add(new Paragraph("")));
-        table.addCell(new Cell().add(new Paragraph("")));
+        //table.addCell(new Cell().add(new Paragraph("")));
         table.addCell(new Cell().add(new Paragraph("Total")));
-        table.addCell(new Cell().add(new Paragraph(String.valueOf(totalBrute))));
-        table.addCell(new Cell().add(new Paragraph(String.valueOf(totalRas))));
-        table.addCell(new Cell().add(new Paragraph(String.valueOf(totalNet))));
+        table.addCell(new Cell().add(new Paragraph(String.format("%.2f", totalBrute))));
+        table.addCell(new Cell().add(new Paragraph(String.format("%.2f", totalRas))));
+        table.addCell(new Cell().add(new Paragraph(String.format("%.2f", totalNet))));
+
         document.add(table);
 
-        String nombreEnLettre = convertir(totalNet);
-        Paragraph message = new Paragraph("Arrêter cet état à la somme de: "+nombreEnLettre);
+        String nombreEnLettre = convertir(totalBrute);
+        Paragraph message = new Paragraph("Arrêté cet état à la somme de: "+nombreEnLettre);
         document.add(message);
         document.close();
         return baos.toByteArray();

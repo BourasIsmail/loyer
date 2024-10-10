@@ -100,6 +100,9 @@ public class PaiementService {
             //pourcentage ras
             double brutAnnuel = bruteMensuel * 12;
              rasP = calcPourcentageRAS(brutAnnuel, isPersonnemoral(local.getProprietaires()));
+             if(local.getId() == 3809  && rasP<=10){
+                 rasP = 10;
+             }
             //montant de ras
              ras = Math.ceil(calcRAS(bruteMensuel,rasP));
 

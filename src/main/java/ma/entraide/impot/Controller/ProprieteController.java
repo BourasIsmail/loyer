@@ -33,5 +33,14 @@ public class ProprieteController {
         }
     }
 
+    @PutMapping("/update/{id}")
+    public ResponseEntity<Proprietaire> update(@PathVariable Long id, @RequestBody Proprietaire proprietaire) {
+        try{
+            Proprietaire proprietaireUpdate = proprieteService.update(id, proprietaire);
+            return ResponseEntity.ok(proprietaireUpdate);
+        }catch(Exception e){
+            return ResponseEntity.notFound().build();
+        }
+    }
 
 }
