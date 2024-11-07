@@ -45,6 +45,8 @@ public class Local {
 
     private String fileType;
 
+    private String idContrat;
+
     @ManyToOne(cascade = CascadeType.DETACH)
     @JoinColumn(name = "province_id")
     private Province province;

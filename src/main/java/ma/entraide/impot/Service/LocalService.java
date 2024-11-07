@@ -75,6 +75,7 @@ public class LocalService {
         newLocal.setRib(local.getRib());
         newLocal.setEtat(local.getEtat());
         newLocal.setBrutMensuel(local.getBrutMensuel());
+        newLocal.setIdContrat(local.getIdContrat());
         return localRepo.save(newLocal);
     }
 
