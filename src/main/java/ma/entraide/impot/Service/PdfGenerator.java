@@ -167,7 +167,7 @@ public class PdfGenerator {
         document.add(para2);
 
         Text t3 = new Text("J'ai l'honneur de vous demander de bien vouloir faire procéder aux virements, désignés ci-après" +
-                "  par le débit du compte n°"+nCompte+" ouvert à "+nom+", au nom de l'Entraide " +
+                "  par le débit du compte n°\n"+nCompte+"\n ouvert à "+nom+", au nom de l'Entraide " +
                 "Nationale. \n Réglement du loyer du mois de "+pm.getMoisAnnee()+".("+pm.getLocal().getProvince().getRegion().getName()+")\n" +
                 "Veuillez agréer, Monsieur, l'expression de mes salutations distinguées.\n OP "+nOP+" du "+date);
         Paragraph para3 = new Paragraph(t3);
