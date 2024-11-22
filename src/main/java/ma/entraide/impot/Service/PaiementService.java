@@ -1,5 +1,6 @@
 package ma.entraide.impot.Service;
 
+import ma.entraide.impot.Entity.ComptePayement;
 import ma.entraide.impot.Entity.Local;
 import ma.entraide.impot.Entity.Paiement;
 import ma.entraide.impot.Entity.Proprietaire;
@@ -14,6 +15,7 @@ import java.time.Month;
 import java.time.ZoneId;
 import java.util.*;
 
+import static ma.entraide.impot.Service.PdfGenerator.generateOV;
 import static ma.entraide.impot.Service.PdfGenerator.generatePdfEtat;
 
 @Service
@@ -23,6 +25,9 @@ public class PaiementService {
 
     @Autowired
     private LocalService localService;
+
+    @Autowired
+    private ComptePayementService comptePayementService;
 
     public Paiement getById(Long id) {
         Optional<Paiement> paiementOptional = paiementRepo.findById(id);
@@ -96,7 +101,7 @@ public class PaiementService {
         double ras = 0;
         double mtNet = 0;
 
-        if(local.getEtat().equals("actif") || local.getEtat().equals("résilié")){
+        if(local.getEtat().equals("actif") || local.getEtat().equals("résilié") && local.getModeDePaiement().equals("virement")){
             //pourcentage ras
             double brutAnnuel = bruteMensuel * 12;
              rasP = calcPourcentageRAS(brutAnnuel, isPersonnemoral(local.getProprietaires()));
@@ -120,6 +125,15 @@ public class PaiementService {
                 paiements.add(payerLocal(l, date));
         }
         return generatePdfEtat(paiements);
+    }
+
+    public byte[] genOv(List<Local> local, Date date, String nOrdre, String nOP, String dateCreation
+    , ComptePayement comptePayement, String mode) throws IOException {
+        List<Paiement> paiements = new ArrayList<>();
+        for (Local l : local) {
+            paiements.add(payerLocal(l, date));
+        }
+        return generateOV(paiements, nOrdre, nOP, dateCreation, comptePayement, mode);
     }
 
     public int calcPourcentageRAS(double mt, boolean isMoral){

@@ -2,6 +2,7 @@ package ma.entraide.impot.Controller;
 
 import lombok.Data;
 import ma.entraide.impot.Entity.Local;
+import ma.entraide.impot.Entity.OvRequest;
 import ma.entraide.impot.Entity.Paiement;
 import ma.entraide.impot.Entity.PayerRequest;
 import ma.entraide.impot.Service.PaiementService;
@@ -74,6 +75,30 @@ public class PaiementController {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
             headers.setContentDispositionFormData("attachment", "etat.pdf");
+            headers.setContentLength(result.length);
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(result);
+        }
+        catch (Exception e) {
+            System.out.println(e);
+            return ResponseEntity.notFound().build();
+        }
+
+    }
+
+    @PostMapping("/ov")
+    public ResponseEntity<byte[]> ov(@RequestBody OvRequest request)  {
+        try {
+            System.out.println(request);
+            byte[] result = paiementService.genOv(request.getLocals(), request.getDate(), request.getNOrdre(),
+                    request.getNOP(), request.getDateCreation(), request.getComptePaiement(), request.getMode());
+
+            // Set headers for download
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", "ov.pdf");
             headers.setContentLength(result.length);
 
             return ResponseEntity.ok()

@@ -15,6 +15,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +28,7 @@ public class LocalService {
     private ProprieteService proprieteService;
     @Autowired
     private ProvinceService provinceService;
+
 
 
     public List<Local> getAll() {
@@ -74,8 +76,13 @@ public class LocalService {
         newLocal.setAdresse(local.getAdresse());
         newLocal.setRib(local.getRib());
         newLocal.setEtat(local.getEtat());
+        newLocal.setDateResiliation(local.getDateResiliation());
+        newLocal.setDateEffetContrat(local.getDateEffetContrat());
+        newLocal.setLatitude(local.getLatitude());
+        newLocal.setLongitude(local.getLongitude());
         newLocal.setBrutMensuel(local.getBrutMensuel());
         newLocal.setIdContrat(local.getIdContrat());
+        newLocal.setModeDePaiement(local.getModeDePaiement());
         return localRepo.save(newLocal);
     }
 

@@ -51,6 +51,14 @@ public class Local {
     @JoinColumn(name = "province_id")
     private Province province;
 
+    private String dateResiliation;
 
+    private String dateEffetContrat;
+
+    private String modeDePaiement;
+
+    private float latitude;
+
+    private float longitude;
 
 }
