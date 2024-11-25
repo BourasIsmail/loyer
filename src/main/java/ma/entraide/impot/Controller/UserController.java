@@ -79,7 +79,6 @@ public class UserController {
 
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMIN_ROLES')")
     public ResponseEntity<String> deleteProduct(@PathVariable("id") Integer id){
         try {
             userInfoService.deleteUser(id);
