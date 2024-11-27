@@ -5,12 +5,14 @@ import ma.entraide.impot.Service.LocalService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Date;
 import java.util.List;
 
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
@@ -74,6 +76,7 @@ public class LocalController {
             Local result = localService.updateLocal(id, local);
             return ResponseEntity.ok(result);
         }catch (Exception e){
+            System.out.println(e.getMessage());
             return ResponseEntity.notFound().build();
         }
     }
@@ -116,5 +119,13 @@ public class LocalController {
         return ResponseEntity.ok(data);
     }
 
+    @GetMapping("/confirmed")
+    public ResponseEntity<List<Local>> getConfirmedLocals(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date date,
+            @RequestParam String regionName) {
+
+        List<Local> confirmedLocals = localService.getConfirmedLocalsByDateAndRegion(date, regionName);
+        return ResponseEntity.ok(confirmedLocals);
+    }
 
 }

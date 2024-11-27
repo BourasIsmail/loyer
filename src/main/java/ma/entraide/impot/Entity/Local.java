@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -60,5 +61,9 @@ public class Local {
     private float latitude;
 
     private float longitude;
+
+    private double ancientBrute;
+
+    private Date dateChangementBrute;
 
 }

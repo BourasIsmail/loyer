@@ -58,8 +58,7 @@ public class PaiementService {
         //get month and year
         int month = localDate.getMonthValue();
         int year = localDate.getYear();
-
-        String periode = month +"/"+year;
+        String periode = String.format("%02d/%d", month, year);
 
         //pourcentage ras
         double brutAnnuel = mensuelBrute * 12;
@@ -166,7 +165,33 @@ public class PaiementService {
         return generatePdfEtat(paiements);
     }
 
+    public double payer(double montant){
 
+        //
+        int rasP = 0;
+        double ras = 0;
+        double mtNet = 0;
+
+            //pourcentage ras
+            double brutAnnuel = montant * 12;
+        if(brutAnnuel<30000 ){
+            rasP = 0;
+        }
+        else if(brutAnnuel>=30000 && brutAnnuel<120000){
+            rasP = 10;
+        }
+        else if(brutAnnuel>=120000 ){
+            rasP = 15;
+        }
+
+            //montant de ras
+            ras = Math.ceil(calcRAS(montant,rasP));
+
+            //montant net
+            mtNet = montant-ras;
+
+        return mtNet;
+    }
 
 
 

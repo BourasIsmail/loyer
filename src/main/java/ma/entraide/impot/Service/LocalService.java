@@ -1,8 +1,6 @@
 package ma.entraide.impot.Service;
 
-import ma.entraide.impot.Entity.Local;
-import ma.entraide.impot.Entity.Proprietaire;
-import ma.entraide.impot.Entity.Province;
+import ma.entraide.impot.Entity.*;
 import ma.entraide.impot.Repository.LocalRepo;
 import ma.entraide.impot.Repository.ProprieteRepo;
 import ma.entraide.impot.Repository.ProvinceRepo;
@@ -14,10 +12,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 @Service
 
@@ -28,6 +27,12 @@ public class LocalService {
     private ProprieteService proprieteService;
     @Autowired
     private ProvinceService provinceService;
+    @Autowired
+    private PaiementService paiementService;
+    @Autowired
+    private ConfirmedPaymentService confirmedPaymentService;
+    @Autowired
+    private AvenantService avenantService;
 
 
 
@@ -62,7 +67,7 @@ public class LocalService {
         return localRepo.save(local);
     }
 
-    public Local updateLocal(Long id ,Local local) {
+    public Local updateLocal(Long id, Local local) {
         Local newLocal = getById(id);
         Province province = provinceService.getProvinceById(local.getProvince().getId());
         newLocal.setProvince(province);
@@ -80,9 +85,40 @@ public class LocalService {
         newLocal.setDateEffetContrat(local.getDateEffetContrat());
         newLocal.setLatitude(local.getLatitude());
         newLocal.setLongitude(local.getLongitude());
-        newLocal.setBrutMensuel(local.getBrutMensuel());
         newLocal.setIdContrat(local.getIdContrat());
         newLocal.setModeDePaiement(local.getModeDePaiement());
+
+        double aBrute = newLocal.getBrutMensuel();
+
+        newLocal.setBrutMensuel(local.getBrutMensuel());
+
+        if (aBrute != newLocal.getBrutMensuel()) {
+            newLocal.setAncientBrute(aBrute);
+            newLocal.setBrutMensuel(local.getBrutMensuel());
+            newLocal.setDateChangementBrute(local.getDateChangementBrute());
+
+            Date date = newLocal.getDateChangementBrute();
+            LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            // get month and year
+            int month = localDate.getMonthValue();
+            int year = localDate.getYear();
+
+            List<ConfirmedPayment> cp = confirmedPaymentService.getConfirmedPaymentByLocal(newLocal.getId());
+            if(!cp.isEmpty()){
+                double total = 0;
+                for (ConfirmedPayment cl : cp) {
+
+                    if (cl.getYear() <year || (cl.getYear()==year && cl.getMois()<=month)) {
+                        Paiement p = paiementService.payerLocal(cl.getLocal(),cl.getDate());
+                        double pPre = paiementService.payer(newLocal.getAncientBrute());
+                        double av = p.getNetMensuel()-pPre;
+                        total +=av;
+                    }
+                }
+                avenantService.addAvenant(new Avenant(newLocal,total));
+            }
+        }
+
         return localRepo.save(newLocal);
     }
 
@@ -138,5 +174,12 @@ public class LocalService {
         };
         return data;
     }
+    public List<Local> getConfirmedLocalsByDateAndRegion(Date date, String regionName) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        int month = cal.get(Calendar.MONTH) + 1; // Calendar.MONTH is zero-based
+        int year = cal.get(Calendar.YEAR);
 
+        return localRepo.findConfirmedLocalsByMonthYearAndRegion(month, year, regionName);
+    }
 }

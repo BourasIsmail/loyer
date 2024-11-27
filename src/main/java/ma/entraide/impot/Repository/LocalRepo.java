@@ -48,4 +48,17 @@ public interface LocalRepo extends JpaRepository<Local, Long> {
 
     @Query("select count(l) from Local l where l.etat = 'suspendue'")
     public long countEtatSuspendue();
+
+    @Query("SELECT DISTINCT l FROM Local l " +
+            "JOIN l.province p " +
+            "JOIN p.region r " +
+            "JOIN ConfirmedPayment cp ON cp.local = l " +
+            "WHERE FUNCTION('YEAR', cp.date) = :year " +
+            "AND FUNCTION('MONTH', cp.date) = :month " +
+            "AND r.name = :regionName")
+    List<Local> findConfirmedLocalsByMonthYearAndRegion(
+            @Param("month") int month,
+            @Param("year") int year,
+            @Param("regionName") String regionName);
 }
+
