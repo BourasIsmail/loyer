@@ -43,13 +43,14 @@ public class ProprieteController {
         }
     }
 
-    @PostMapping
+    @PostMapping("/add")
     public ResponseEntity<Proprietaire> create(@RequestBody Proprietaire proprietaire) {
         try {
             Proprietaire proprietaire1 = proprieteService.add(proprietaire);
             return ResponseEntity.ok(proprietaire1);
         }
         catch(Exception e){
+            System.out.println(e.getMessage());
             return ResponseEntity.notFound().build();
         }
     }

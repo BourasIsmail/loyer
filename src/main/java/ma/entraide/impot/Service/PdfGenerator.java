@@ -18,6 +18,8 @@ import ma.entraide.impot.Entity.Proprietaire;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import static ma.entraide.impot.Service.NombreEnLettres.convertir;
@@ -124,6 +126,9 @@ public class PdfGenerator {
     }
 
     public static byte[] generateOV(List<Paiement> paiements, String nOrdre, String nOP, String date, ComptePayement c, String mode) throws IOException {
+        Date dateSignature = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+        String formattedDate = dateFormat.format(dateSignature);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         // Create a PDF writer
         String nCompte = c.getNumCompte();
@@ -174,7 +179,7 @@ public class PdfGenerator {
         para3.setTextAlignment(TextAlignment.CENTER);
         document.add(para3);
 
-        float [] pointColumnWidths = {30F,300F,80, 300F};
+        float [] pointColumnWidths = {30F,300F,80F, 300F};
         Table table = new Table(pointColumnWidths);
 
         table.addCell(new Cell().add(new Paragraph("N°")));
@@ -212,6 +217,10 @@ public class PdfGenerator {
         String nombreEnLettre = convertir(totalNet);
         Paragraph message = new Paragraph("Arrêté cet état à la somme de: "+nombreEnLettre);
         document.add(message);
+        Text dateSign = new Text("Rédigé le :   "+formattedDate);
+        Paragraph paraDateSign = new Paragraph(dateSign);
+        paraDateSign.setTextAlignment(TextAlignment.RIGHT);
+        document.add(paraDateSign);
         document.close();
         return baos.toByteArray();
     }
