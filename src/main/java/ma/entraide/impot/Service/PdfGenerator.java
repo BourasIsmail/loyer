@@ -12,9 +12,7 @@ import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.properties.HorizontalAlignment;
 import com.itextpdf.layout.properties.TextAlignment;
-import ma.entraide.impot.Entity.ComptePayement;
-import ma.entraide.impot.Entity.Paiement;
-import ma.entraide.impot.Entity.Proprietaire;
+import ma.entraide.impot.Entity.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -199,7 +197,7 @@ public class PdfGenerator {
                 table.addCell(new Cell().add(new Paragraph(String.valueOf(i++))));
                 table.addCell(new Cell().add(new Paragraph(String.valueOf(nomComplet))));
                 table.addCell(new Cell().add(new Paragraph(String.format("%.2f",(pa)))));
-                table.addCell(new Cell().add(new Paragraph(paiement.getLocal().getRib())));
+                table.addCell(new Cell().add(new Paragraph(paiement.getRib())));
             }
         }
 
@@ -217,10 +215,79 @@ public class PdfGenerator {
         String nombreEnLettre = convertir(totalNet);
         Paragraph message = new Paragraph("Arrêté cet état à la somme de: "+nombreEnLettre);
         document.add(message);
-        Text dateSign = new Text("Rédigé le :   "+formattedDate);
+        Text dateSign = new Text("Rabat le :   "+formattedDate);
         Paragraph paraDateSign = new Paragraph(dateSign);
         paraDateSign.setTextAlignment(TextAlignment.RIGHT);
         document.add(paraDateSign);
+        document.close();
+        return baos.toByteArray();
+    }
+
+    public static byte[] generateProprietaireConfirmedPaymentsPdf(Proprietaire proprietaire, List<ConfirmedPayment> confirmedPayments, int year) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PdfWriter pdfWriter = new PdfWriter(baos);
+        PdfDocument pdfDocument = new PdfDocument(pdfWriter);
+        Document document = new Document(pdfDocument);
+
+        // Add title
+        Paragraph title = new Paragraph("Etat annuel des retenues exécutées pour le locataire  " + proprietaire.getNomComplet() + " - année " + year)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setBold()
+                .setFontSize(16);
+        document.add(title);
+
+        // Add proprietaire details
+        document.add(new Paragraph("Détails du proprietaire :"));
+        document.add(new Paragraph("Name: " + proprietaire.getNomComplet()));
+        document.add(new Paragraph("CIN: " + proprietaire.getCin()));
+        document.add(new Paragraph("Phone: " + proprietaire.getTelephone()));
+        document.add(new Paragraph("adresse: " + proprietaire.getAdresse()));
+
+        // Create table
+        Table table = new Table(new float[]{1, 2, 2, 2, 2, 2});
+        table.addHeaderCell("Local adresse");
+        table.addHeaderCell("Month");
+        table.addHeaderCell("Montant Brute");
+        table.addHeaderCell("Montant Net");
+        table.addHeaderCell("RAS");
+        table.addHeaderCell("RIB");
+
+        double totalGross = 0;
+        double totalNet = 0;
+        double totalRas = 0;
+
+        for (ConfirmedPayment payment : confirmedPayments) {
+            Local local = payment.getLocal();
+            if (local.getProprietaires().contains(proprietaire)) {
+                table.addCell(String.valueOf(local.getAdresse()));
+                table.addCell(String.valueOf(payment.getMois()));
+                table.addCell(String.format("%.2f", payment.getMontantBrute()));
+                table.addCell(String.format("%.2f", payment.getMontantNetPaye()));
+                table.addCell(String.format("%.2f", payment.getRas()));
+                table.addCell(payment.getRib());
+
+                totalGross += payment.getMontantBrute();
+                totalNet += payment.getMontantNetPaye();
+                totalRas += payment.getRas();
+            }
+        }
+
+        // Add totals
+        table.addCell("Total");
+        table.addCell("");
+        table.addCell(String.format("%.2f", totalGross));
+        table.addCell(String.format("%.2f", totalNet));
+        table.addCell(String.format("%.2f", totalRas));
+        table.addCell("");
+
+        document.add(table);
+
+        // Add summary
+        document.add(new Paragraph("Sommaire de l'année " + year + " :"));
+        document.add(new Paragraph("Total montant brut : " + String.format("%.2f", totalGross)));
+        document.add(new Paragraph("Total montant net : " + String.format("%.2f", totalNet)));
+        document.add(new Paragraph("Total RAS : " + String.format("%.2f", totalRas)));
+
         document.close();
         return baos.toByteArray();
     }

@@ -15,4 +15,7 @@ public interface ConfirmedPaymentRepo extends JpaRepository<ConfirmedPayment, Lo
 
     @Query("select c from ConfirmedPayment c where c.local.id = :id")
     public List<ConfirmedPayment> findConfirmedPaymentByLocalId(@Param("id") Long id);
+
+    @Query("SELECT c FROM ConfirmedPayment c JOIN c.local l JOIN l.proprietaires p WHERE c.year = :year AND p.id = :proprietaireId")
+    public List<ConfirmedPayment> findConfirmedPaymentsByYearAndProprietaire(@Param("year") int year, @Param("proprietaireId") Long proprietaireId);
 }

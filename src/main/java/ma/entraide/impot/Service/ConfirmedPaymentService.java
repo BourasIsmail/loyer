@@ -2,6 +2,7 @@ package ma.entraide.impot.Service;
 
 import ma.entraide.impot.Entity.ConfirmedPayment;
 import ma.entraide.impot.Entity.Local;
+import ma.entraide.impot.Entity.Paiement;
 import ma.entraide.impot.Repository.ConfirmedPaymentRepo;
 import ma.entraide.impot.Repository.LocalRepo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,12 +23,14 @@ public class ConfirmedPaymentService {
 
     @Autowired
     private LocalService localService;
+
     @Autowired
-    private LocalRepo localRepo;
+    private PaiementService paiementService;
 
     public List<ConfirmedPayment> getConfirmedPayments() {
         return confirmedPaymentRepo.findAll();
     }
+
     public ConfirmedPayment getConfirmedPayment(Long id) {
         Optional<ConfirmedPayment> confirmedPayment = confirmedPaymentRepo.findById(id);
         if (confirmedPayment.isPresent()) {
@@ -40,14 +43,18 @@ public class ConfirmedPaymentService {
         Local l = localService.getById(confirmedPayment.getLocal().getId());
         Date date = confirmedPayment.getDate();
         LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-
-        //get month and year
         int month = localDate.getMonthValue();
         int year = localDate.getYear();
         String periode = String.format("%02d/%d", month, year);
+        Paiement p = paiementService.payerLocal(l,date);
+        confirmedPayment.setMontantBrute(p.getBruteMensuel());
+        confirmedPayment.setTaux(p.getPourcentageRAS());
+        confirmedPayment.setMontantNetPaye(p.getNetMensuel());
+        confirmedPayment.setRas(p.getRas());
         confirmedPayment.setMois(month);
         confirmedPayment.setYear(year);
         confirmedPayment.setMoisAnnee(periode);
+        confirmedPayment.setRib(l.getRib());
         confirmedPayment.setLocal(l);
         return confirmedPaymentRepo.save(confirmedPayment);
     }
@@ -60,7 +67,6 @@ public class ConfirmedPaymentService {
         for (ConfirmedPayment c : confirmedPayment) {
             Date date = c.getDate();
             LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-            //get month and year
             int month = localDate.getMonthValue();
             int year = localDate.getYear();
             String periode = String.format("%02d/%d", month, year);
@@ -85,4 +91,12 @@ public class ConfirmedPaymentService {
         }
     }
 
+    public List<ConfirmedPayment> getConfirmedPaymentsByYearAndProprietaire(int year, Long proprietaireId) {
+        List<ConfirmedPayment> payments = confirmedPaymentRepo.findConfirmedPaymentsByYearAndProprietaire(year, proprietaireId);
+        if (payments.isEmpty()) {
+            throw new ResourceNotFoundException("No confirmed payments found for the given year and proprietaire");
+        }
+        return payments;
+    }
 }
+

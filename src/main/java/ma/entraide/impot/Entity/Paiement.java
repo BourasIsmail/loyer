@@ -37,16 +37,18 @@ public class Paiement {
 
     private String mtNetEnLettre;
 
+    private String rib;
 
     //input
     @ManyToOne(cascade = CascadeType.DETACH)
     @JoinColumn(name = "local_id")
     private Local local;
 
-    public Paiement(Date date, int month, int year, String periode, double bruteMensuel, int pourcentageRAS, double ras, double netMensuel, Local local) {
+    public Paiement(Date date, int month, int year, String periode, String rib, double bruteMensuel, int pourcentageRAS, double ras, double netMensuel, Local local) {
         this.dateCreation = date;
         this.month = month;
         this.year = year;
+        this.rib= rib;
         this.moisAnnee = periode;
         this.bruteMensuel = bruteMensuel;
         this.pourcentageRAS = pourcentageRAS;

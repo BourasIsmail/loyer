@@ -1,17 +1,15 @@
 package ma.entraide.impot.Service;
 
-import ma.entraide.impot.Entity.ComptePayement;
-import ma.entraide.impot.Entity.Local;
-import ma.entraide.impot.Entity.Paiement;
-import ma.entraide.impot.Entity.Proprietaire;
+import ma.entraide.impot.Entity.*;
+import ma.entraide.impot.Repository.ConfirmedPaymentRepo;
 import ma.entraide.impot.Repository.PaiementRepo;
+import ma.entraide.impot.Repository.RASConfigRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.Month;
 import java.time.ZoneId;
 import java.util.*;
 
@@ -29,12 +27,17 @@ public class PaiementService {
     @Autowired
     private ComptePayementService comptePayementService;
 
+    @Autowired
+    private ConfirmedPaymentRepo confirmedPaymentRepo;
+
+    @Autowired
+    private RASConfigRepo rasConfigRepo;
+
     public Paiement getById(Long id) {
         Optional<Paiement> paiementOptional = paiementRepo.findById(id);
         if (paiementOptional.isPresent()) {
             return paiementOptional.get();
-        }
-        else{
+        } else {
             throw new ResourceNotFoundException("paiement not found");
         }
     }
@@ -62,14 +65,13 @@ public class PaiementService {
 
         //pourcentage ras
         double brutAnnuel = mensuelBrute * 12;
-        int rasP = calcPourcentageRAS(brutAnnuel, isPersonnemoral(local.getProprietaires()));
+        int rasP = calcPourcentageRAS(brutAnnuel, isPersonnemoral(local.getProprietaires()), local.getId());
 
         //montant de ras
-        double ras = Math.ceil(calcRAS(mensuelBrute,rasP));
+        double ras = Math.ceil(calcRAS(mensuelBrute, rasP));
 
         //montant net
-        double mtNet = mensuelBrute-ras;
-
+        double mtNet = mensuelBrute - ras;
 
         paiement.setBruteMensuel(mensuelBrute);
         paiement.setRas(ras);
@@ -86,48 +88,51 @@ public class PaiementService {
         return paiementRepo.save(paiement);
     }
 
-    public Paiement payerLocal(Local localPaye, Date date){
+    public Paiement payerLocal(Local localPaye, Date date) {
         Local local = localService.getById(localPaye.getId());
         double bruteMensuel = local.getBrutMensuel();
         LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-        //get month and year
         int month = localDate.getMonthValue();
         int year = localDate.getYear();
-        String periode = month +"/"+year;
+        String periode = month + "/" + year;
 
-        //
         int rasP = 0;
         double ras = 0;
         double mtNet = 0;
+        String rib = "";
 
-        if(local.getEtat().equals("actif") || local.getEtat().equals("résilié") && local.getModeDePaiement().equals("virement")){
-            //pourcentage ras
+        // Check if a ConfirmedPayment exists for this local and date
+        ConfirmedPayment confirmedPayment = confirmedPaymentRepo.findConfirmedPaymentByDateAndLocal(local.getId(), periode);
+
+        if (confirmedPayment != null) {
+            // Use values from ConfirmedPayment
+            bruteMensuel = confirmedPayment.getMontantBrute();
+            ras = confirmedPayment.getRas();
+            rasP = (int) confirmedPayment.getTaux();
+            mtNet = confirmedPayment.getMontantNetPaye();
+            rib = confirmedPayment.getRib();
+        } else if (local.getEtat().equals("actif") || (local.getEtat().equals("résilié") && local.getModeDePaiement().equals("virement"))) {
+            // Calculate values using RASConfig
             double brutAnnuel = bruteMensuel * 12;
-             rasP = calcPourcentageRAS(brutAnnuel, isPersonnemoral(local.getProprietaires()));
-             if(local.getId() == 3809  && rasP<=10){
-                 rasP = 10;
-             }
-            //montant de ras
-             ras = Math.ceil(calcRAS(bruteMensuel,rasP));
-
-            //montant net
-             mtNet = bruteMensuel-ras;
+            rasP = calcPourcentageRAS(brutAnnuel, isPersonnemoral(local.getProprietaires()), local.getId());
+            ras = Math.ceil(calcRAS(bruteMensuel, rasP));
+            mtNet = bruteMensuel - ras;
+            rib = local.getRib();
         }
 
-
-        return new Paiement(date, month, year, periode, bruteMensuel, rasP, ras, mtNet, local);
+        return new Paiement(date, month, year, periode, rib, bruteMensuel, rasP, ras, mtNet, local);
     }
 
     public byte[] payerEnMasse(List<Local> local, Date date) throws IOException {
         List<Paiement> paiements = new ArrayList<>();
         for (Local l : local) {
-                paiements.add(payerLocal(l, date));
+            paiements.add(payerLocal(l, date));
         }
         return generatePdfEtat(paiements);
     }
 
-    public byte[] genOv(List<Local> local, Date date, String nOrdre, String nOP, String dateCreation
-    , ComptePayement comptePayement, String mode) throws IOException {
+    public byte[] genOv(List<Local> local, Date date, String nOrdre, String nOP, String dateCreation,
+                        ComptePayement comptePayement, String mode) throws IOException {
         List<Paiement> paiements = new ArrayList<>();
         for (Local l : local) {
             paiements.add(payerLocal(l, date));
@@ -135,24 +140,38 @@ public class PaiementService {
         return generateOV(paiements, nOrdre, nOP, dateCreation, comptePayement, mode);
     }
 
-    public int calcPourcentageRAS(double mt, boolean isMoral){
-        if(mt<30000 || isMoral){
+    public int calcPourcentageRAS(double brutAnnuel, boolean isMoral, Long localId) {
+        if (isMoral) {
             return 0;
         }
-        else if(mt>=30000 && mt<120000){
-            return 10;
+
+        RASConfig config = rasConfigRepo.findFirstByOrderByIdDesc();
+        if (config == null) {
+            throw new ResourceNotFoundException("RAS configuration not found");
         }
-        else if(mt>=120000 ){
-            return 15;
+
+        // Check for special case
+        Integer specialCasePercentage = config.getSpecialCasePercentages().get(localId);
+        if (specialCasePercentage != null) {
+            return specialCasePercentage;
         }
-        return 0;
+
+        if (brutAnnuel < config.getLowerThreshold1()) {
+            return 0;
+        } else if (brutAnnuel >= config.getLowerThreshold1() && brutAnnuel < config.getUpperThreshold1()) {
+            return config.getPercentage1();
+        } else if (brutAnnuel >= config.getLowerThreshold2() && brutAnnuel < config.getUpperThreshold2()) {
+            return config.getPercentage2();
+        } else {
+            return config.getPercentage3();
+        }
     }
 
-    public double calcRAS(double mt , int ras){
+    public double calcRAS(double mt, int ras) {
         return (mt * ras) / 100;
     }
 
-    public boolean isPersonnemoral(List<Proprietaire> proprietaireList){
+    public boolean isPersonnemoral(List<Proprietaire> proprietaireList) {
         for (Proprietaire proprietaire : proprietaireList) {
             if (proprietaire.getType().equals("personne morale")) {
                 return true;
@@ -165,34 +184,29 @@ public class PaiementService {
         return generatePdfEtat(paiements);
     }
 
-    public double payer(double montant){
+    public double payer(double montant) {
+        RASConfig config = rasConfigRepo.findFirstByOrderByIdDesc();
+        if (config == null) {
+            throw new ResourceNotFoundException("RAS configuration not found");
+        }
 
-        //
-        int rasP = 0;
-        double ras = 0;
-        double mtNet = 0;
+        double brutAnnuel = montant * 12;
+        int rasP;
 
-            //pourcentage ras
-            double brutAnnuel = montant * 12;
-        if(brutAnnuel<30000 ){
+        if (brutAnnuel < config.getLowerThreshold1()) {
             rasP = 0;
-        }
-        else if(brutAnnuel>=30000 && brutAnnuel<120000){
-            rasP = 10;
-        }
-        else if(brutAnnuel>=120000 ){
-            rasP = 15;
+        } else if (brutAnnuel >= config.getLowerThreshold1() && brutAnnuel < config.getUpperThreshold1()) {
+            rasP = config.getPercentage1();
+        } else if (brutAnnuel >= config.getLowerThreshold2() && brutAnnuel < config.getUpperThreshold2()) {
+            rasP = config.getPercentage2();
+        } else {
+            rasP = config.getPercentage3();
         }
 
-            //montant de ras
-            ras = Math.ceil(calcRAS(montant,rasP));
-
-            //montant net
-            mtNet = montant-ras;
+        double ras = Math.ceil(calcRAS(montant, rasP));
+        double mtNet = montant - ras;
 
         return mtNet;
     }
-
-
-
 }
+

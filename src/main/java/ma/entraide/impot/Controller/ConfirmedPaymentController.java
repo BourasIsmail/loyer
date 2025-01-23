@@ -50,4 +50,16 @@ public class ConfirmedPaymentController {
         }
     }
 
+    @GetMapping("/year/{year}/proprietaire/{proprietaireId}")
+    public ResponseEntity<?> getConfirmedPaymentsByYearAndProprietaire(
+            @PathVariable int year,
+            @PathVariable Long proprietaireId) {
+        try {
+            List<ConfirmedPayment> payments = confirmedPaymentService.getConfirmedPaymentsByYearAndProprietaire(year, proprietaireId);
+            return ResponseEntity.ok(payments);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
 }

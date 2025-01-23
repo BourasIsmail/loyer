@@ -1,5 +1,6 @@
 package ma.entraide.impot.Service;
 
+import ma.entraide.impot.Entity.ConfirmedPayment;
 import ma.entraide.impot.Entity.Proprietaire;
 import ma.entraide.impot.Entity.Province;
 import ma.entraide.impot.Entity.Rib;
@@ -8,9 +9,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 
@@ -24,6 +27,9 @@ public class ProprieteService {
     @Autowired
     private ProvinceService provinceService;
 
+    @Autowired
+    private ConfirmedPaymentService confirmedPaymentService;
+
     public List<Proprietaire> getAll() {
         return proprieteRepo.findAll();
     }
@@ -32,9 +38,8 @@ public class ProprieteService {
         Optional<Proprietaire> proprietaire = proprieteRepo.findById(id);
         if (proprietaire.isPresent()) {
             return proprietaire.get();
-        }
-        else{
-            throw new ResourceNotFoundException("propriete n'existe pas");
+        } else {
+            throw new ResourceNotFoundException("Proprietaire not found with id: " + id);
         }
     }
 
@@ -66,5 +71,11 @@ public class ProprieteService {
     }
 
 
+    public byte[] generateConfirmedPaymentsReport(Long proprietaireId, int year) throws IOException {
+        Proprietaire proprietaire = getById(proprietaireId);
+        List<ConfirmedPayment> confirmedPayments = confirmedPaymentService.getConfirmedPaymentsByYearAndProprietaire(year, proprietaireId);
+        System.out.println(confirmedPayments);
+        return PdfGenerator.generateProprietaireConfirmedPaymentsPdf(proprietaire, confirmedPayments, year);
+    }
 
 }

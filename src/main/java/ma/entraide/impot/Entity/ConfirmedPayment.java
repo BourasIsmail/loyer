@@ -24,6 +24,16 @@ public class ConfirmedPayment {
 
     private String moisAnnee;
 
+    private double montantNetPaye;
+
+    private double montantBrute;
+
+    private double taux;
+
+    private double ras;
+
+    private String rib;
+
     @ManyToOne(cascade = CascadeType.DETACH)
     @JoinColumn(name = "local_id")
     private Local local;
