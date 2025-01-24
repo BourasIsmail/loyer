@@ -265,10 +265,10 @@ public class PdfGenerator {
         if(proprietaire.getCin() != null){
             document.add(new Paragraph("CIN: " + proprietaire.getCin()));
         }
-        if(proprietaire.getRib() != null){
+        if(proprietaire.getTelephone() != null){
             document.add(new Paragraph("Telephone: " + proprietaire.getTelephone()));
         }
-        if(proprietaire.getRib() != null){
+        if(proprietaire.getAdresse() != null ){
             document.add(new Paragraph("adresse: " + proprietaire.getAdresse()));
         }
         // Create table
