@@ -13,12 +13,14 @@ import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.properties.HorizontalAlignment;
 import com.itextpdf.layout.properties.TextAlignment;
 import ma.entraide.impot.Entity.*;
+import org.apache.commons.lang3.ObjectUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 import static ma.entraide.impot.Service.NombreEnLettres.convertir;
 
@@ -260,14 +262,19 @@ public class PdfGenerator {
         // Add proprietaire details
         document.add(new Paragraph("Détails du proprietaire :"));
         document.add(new Paragraph("Nom Complet: " + proprietaire.getNomComplet()));
-        document.add(new Paragraph("CIN: " + proprietaire.getCin()));
-        document.add(new Paragraph("Telephone: " + proprietaire.getTelephone()));
-        document.add(new Paragraph("adresse: " + proprietaire.getAdresse()));
-
+        if(proprietaire.getCin() != null){
+            document.add(new Paragraph("CIN: " + proprietaire.getCin()));
+        }
+        if(proprietaire.getRib() != null){
+            document.add(new Paragraph("Telephone: " + proprietaire.getTelephone()));
+        }
+        if(proprietaire.getRib() != null){
+            document.add(new Paragraph("adresse: " + proprietaire.getAdresse()));
+        }
         // Create table
         Table table = new Table(new float[]{1, 2, 2, 2, 2, 2});
-        table.addHeaderCell("Local adresse");
-        table.addHeaderCell("Month");
+        table.addHeaderCell("Adresse du Local");
+        table.addHeaderCell("Mois");
         table.addHeaderCell("Montant Brute");
         table.addHeaderCell("Montant Net");
         table.addHeaderCell("RAS");
@@ -305,9 +312,9 @@ public class PdfGenerator {
 
         // Add summary
         document.add(new Paragraph("Sommaire de l'année " + year + " :"));
-        document.add(new Paragraph("Total montant brut : " + String.format("%.2f", totalGross)));
-        document.add(new Paragraph("Total montant net : " + String.format("%.2f", totalNet)));
-        document.add(new Paragraph("Total RAS : " + String.format("%.2f", totalRas)));
+        document.add(new Paragraph("Total montant brut : " + String.format("%.2f", totalGross) +" DH"));
+        document.add(new Paragraph("Total montant net : " + String.format("%.2f", totalNet) +" DH"));
+        document.add(new Paragraph("Total RAS : " + String.format("%.2f", totalRas) +" DH"));
 
         document.close();
         return baos.toByteArray();
