@@ -227,7 +227,17 @@ public class PdfGenerator {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PdfWriter pdfWriter = new PdfWriter(baos);
         PdfDocument pdfDocument = new PdfDocument(pdfWriter);
+        pdfDocument.setDefaultPageSize(PageSize.A3);
         Document document = new Document(pdfDocument);
+
+        String logoEntraide = "https://www.entraide.ma/attachements/63ee610678ddb300245a875a-enn.png";
+        ImageData imgData = ImageDataFactory.create(logoEntraide);
+
+        // Creating an Image object
+        Image img = new Image(imgData);
+        // Set the image alignment to center
+        img.setMarginLeft(80);
+        document.add(img);
 
         // Add title
         Paragraph title = new Paragraph("Etat annuel des retenues exécutées pour le locataire  " + proprietaire.getNomComplet() + " - année " + year)
@@ -235,12 +245,23 @@ public class PdfGenerator {
                 .setBold()
                 .setFontSize(16);
         document.add(title);
-
+        String qrCodeContent = proprietaire.toString();
+        try {
+            byte[] qrCodeImage = QRCodeGenerator.generateQRCodeImage(qrCodeContent);
+            ImageData qrImageData = ImageDataFactory.create(qrCodeImage);
+            Image qrCode = new Image(qrImageData);
+            qrCode.setWidth(100);
+            qrCode.setHeight(100);
+            qrCode.setHorizontalAlignment(HorizontalAlignment.CENTER);
+            document.add(qrCode);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         // Add proprietaire details
         document.add(new Paragraph("Détails du proprietaire :"));
-        document.add(new Paragraph("Name: " + proprietaire.getNomComplet()));
+        document.add(new Paragraph("Nom Complet: " + proprietaire.getNomComplet()));
         document.add(new Paragraph("CIN: " + proprietaire.getCin()));
-        document.add(new Paragraph("Phone: " + proprietaire.getTelephone()));
+        document.add(new Paragraph("Telephone: " + proprietaire.getTelephone()));
         document.add(new Paragraph("adresse: " + proprietaire.getAdresse()));
 
         // Create table
