@@ -276,7 +276,7 @@ public class PdfGenerator {
         Table table = new Table(pointColumnWidths1);
         table.addHeaderCell("Adresse du Local");
         table.addHeaderCell("Mois");
-        table.addHeaderCell("Montant Brute");
+        table.addHeaderCell("Montant Brut");
         table.addHeaderCell("Montant Net");
         table.addHeaderCell("RAS");
         table.addHeaderCell("RIB");
