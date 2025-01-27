@@ -291,7 +291,7 @@ public class PdfGenerator {
                 if (payment.getYear() == 2024 && payment.getMois() < 8) {
                     continue;
                 }
-                    table.addCell(String.valueOf(local.getAdresse()+ "-"+local.getProvince().getName()));
+                    table.addCell(String.valueOf(local.getAdresse()+ " - "+local.getProvince().getName()));
                     table.addCell(String.valueOf(payment.getMois()));
                     table.addCell(String.format("%.2f", payment.getMontantBrute()));
                     table.addCell(String.format("%.2f", payment.getMontantNetPaye()));
