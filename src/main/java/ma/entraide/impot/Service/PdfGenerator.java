@@ -242,7 +242,7 @@ public class PdfGenerator {
         document.add(img);
 
         // Add title
-        Paragraph title = new Paragraph("Etat annuel des effectuées pour le propriétaire  " + proprietaire.getNomComplet() + " - année " + year)
+        Paragraph title = new Paragraph("Etat annuel des retenues effectuées pour le propriétaire  " + proprietaire.getNomComplet() + " - année " + year)
                 .setTextAlignment(TextAlignment.CENTER)
                 .setBold()
                 .setFontSize(16);
