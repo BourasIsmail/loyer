@@ -242,7 +242,7 @@ public class PdfGenerator {
         document.add(img);
 
         // Add title
-        Paragraph title = new Paragraph("Etat annuel des retenues exécutées pour le locataire  " + proprietaire.getNomComplet() + " - année " + year)
+        Paragraph title = new Paragraph("Etat annuel des effectuées pour le propriétaire  " + proprietaire.getNomComplet() + " - année " + year)
                 .setTextAlignment(TextAlignment.CENTER)
                 .setBold()
                 .setFontSize(16);
@@ -272,7 +272,8 @@ public class PdfGenerator {
             document.add(new Paragraph("adresse: " + proprietaire.getAdresse()));
         }
         // Create table
-        Table table = new Table(new float[]{1, 2, 2, 2, 2, 2});
+        float [] pointColumnWidths1 = {300F, 30F, 30F, 30F, 30F, 200F};
+        Table table = new Table(pointColumnWidths1);
         table.addHeaderCell("Adresse du Local");
         table.addHeaderCell("Mois");
         table.addHeaderCell("Montant Brute");
@@ -287,19 +288,22 @@ public class PdfGenerator {
         for (ConfirmedPayment payment : confirmedPayments) {
             Local local = payment.getLocal();
             if (local.getProprietaires().contains(proprietaire)) {
-                table.addCell(String.valueOf(local.getAdresse()));
-                table.addCell(String.valueOf(payment.getMois()));
-                table.addCell(String.format("%.2f", payment.getMontantBrute()));
-                table.addCell(String.format("%.2f", payment.getMontantNetPaye()));
-                table.addCell(String.format("%.2f", payment.getRas()));
-                table.addCell(payment.getRib());
+                if (payment.getYear() == 2024 && payment.getMois() < 8) {
+                    continue;
+                }
+                    table.addCell(String.valueOf(local.getAdresse()));
+                    table.addCell(String.valueOf(payment.getMois()));
+                    table.addCell(String.format("%.2f", payment.getMontantBrute()));
+                    table.addCell(String.format("%.2f", payment.getMontantNetPaye()));
+                    table.addCell(String.format("%.2f", payment.getRas()));
+                    table.addCell(payment.getRib());
 
-                totalGross += payment.getMontantBrute();
-                totalNet += payment.getMontantNetPaye();
-                totalRas += payment.getRas();
+                    totalGross += payment.getMontantBrute();
+                    totalNet += payment.getMontantNetPaye();
+                    totalRas += payment.getRas();
+
             }
         }
-
         // Add totals
         table.addCell("Total");
         table.addCell("");
