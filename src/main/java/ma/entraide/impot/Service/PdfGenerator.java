@@ -217,7 +217,7 @@ public class PdfGenerator {
         String nombreEnLettre = convertir(totalNet);
         Paragraph message = new Paragraph("Arrêté cet état à la somme de: "+nombreEnLettre);
         document.add(message);
-        Text dateSign = new Text("Rabat le :   "+formattedDate);
+        Text dateSign = new Text("Rabat le :   "+date);
         Paragraph paraDateSign = new Paragraph(dateSign);
         paraDateSign.setTextAlignment(TextAlignment.RIGHT);
         document.add(paraDateSign);
