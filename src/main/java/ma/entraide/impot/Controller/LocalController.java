@@ -128,4 +128,58 @@ public class LocalController {
         return ResponseEntity.ok(confirmedLocals);
     }
 
+    @GetMapping("/excel/localActif")
+    public ResponseEntity<byte[]> getExcelLocalActif() {
+        try {
+            byte[] result = localService.generateExcelEtatAcitf();
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"etat_actif.xlsx\"")
+                    .body(result);
+        }catch (Exception e){
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/excel/localResilie")
+    public ResponseEntity<byte[]> getExcelLocalResilie() {
+        try {
+            byte[] result = localService.generateExcelEtatResilie();
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"etat_resilie.xlsx\"")
+                    .body(result);
+        }catch (Exception e){
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/excel/localSuspendu")
+    public ResponseEntity<byte[]> getExcelLocalSuspendu() {
+        try {
+            byte[] result = localService.generateExcelEtatSuspendue();
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"etat_suspendu.xlsx\"")
+                    .body(result);
+        }catch (Exception e){
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/etat/actif")
+    public ResponseEntity<List<Local>> getLocalsActif() {
+        return ResponseEntity.ok(localService.getEtatActif());
+    }
+
+    @GetMapping("/etat/suspendu")
+    public ResponseEntity<List<Local>> getLocalsSuspendu() {
+        return ResponseEntity.ok(localService.getEtatSuspendue());
+    }
+
+    @GetMapping("/etat/resilie")
+    public ResponseEntity<List<Local>> getLocalsResilie() {
+        return ResponseEntity.ok(localService.getEtatResilie());
+    }
+
 }

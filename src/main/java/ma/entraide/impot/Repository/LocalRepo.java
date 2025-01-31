@@ -49,6 +49,15 @@ public interface LocalRepo extends JpaRepository<Local, Long> {
     @Query("select count(l) from Local l where l.etat = 'suspendue'")
     public long countEtatSuspendue();
 
+    @Query("select l from Local l where l.etat = 'actif'")
+    public List<Local> getEtatActif();
+
+    @Query("select l from Local l where l.etat = 'résilié'")
+    public List<Local> getEtatResilie();
+
+    @Query("select l from Local l where l.etat = 'suspendue'")
+    public List<Local> getEtatSuspendue();
+
     @Query("SELECT DISTINCT l FROM Local l " +
             "JOIN l.province p " +
             "JOIN p.region r " +

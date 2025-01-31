@@ -12,11 +12,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+
+import static ma.entraide.impot.Service.ExcelFileGenerator.generateLocalsExcel;
 
 @Service
 
@@ -181,5 +184,32 @@ public class LocalService {
         int year = cal.get(Calendar.YEAR);
 
         return localRepo.findConfirmedLocalsByMonthYearAndRegion(month, year, regionName);
+    }
+
+    public List<Local> getEtatActif(){
+        return localRepo.getEtatActif();
+    }
+
+    public List<Local> getEtatResilie(){
+        return localRepo.getEtatResilie();
+    }
+
+    public List<Local> getEtatSuspendue(){
+        return localRepo.getEtatSuspendue();
+    }
+
+    public byte[] generateExcelEtatAcitf() throws IOException {
+        List<Local> locals = localRepo.getEtatActif();
+        return generateLocalsExcel(locals);
+    }
+
+    public byte[] generateExcelEtatResilie() throws IOException {
+        List<Local> locals = localRepo.getEtatResilie();
+        return generateLocalsExcel(locals);
+    }
+
+    public byte[] generateExcelEtatSuspendue() throws IOException {
+        List<Local> locals = localRepo.getEtatSuspendue();
+        return generateLocalsExcel(locals);
     }
 }
