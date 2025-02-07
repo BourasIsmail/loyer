@@ -79,4 +79,9 @@ public class ProprieteController {
         }
     }
 
+    @GetMapping("/byRegion/{id}")
+    public ResponseEntity<List<Proprietaire>> getByRegion(@PathVariable Long id){
+        return ResponseEntity.ok(proprieteService.proprietaireSearch(id));
+    }
+
 }

@@ -78,4 +78,7 @@ public class ProprieteService {
         return PdfGenerator.generateProprietaireConfirmedPaymentsPdf(proprietaire, confirmedPayments, year);
     }
 
+    public List<Proprietaire> proprietaireSearch(Long regionId) {
+        return proprieteRepo.findByProvinceRegion(regionId);
+    }
 }
