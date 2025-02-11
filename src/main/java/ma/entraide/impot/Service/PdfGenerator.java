@@ -287,10 +287,6 @@ public class PdfGenerator {
 
         for (ConfirmedPayment payment : confirmedPayments) {
             Local local = payment.getLocal();
-            if (local.getProprietaires().contains(proprietaire)) {
-                if (payment.getYear() == 2024 && payment.getMois() < 8) {
-                    continue;
-                }
                     table.addCell(String.valueOf(local.getAdresse()+ " - "+local.getProvince().getName()));
                     table.addCell(String.valueOf(payment.getMois()));
                     table.addCell(String.format("%.2f", payment.getMontantBrute()));
@@ -303,7 +299,7 @@ public class PdfGenerator {
                     totalRas += payment.getRas();
 
             }
-        }
+
         // Add totals
         table.addCell("Total");
         table.addCell("");
