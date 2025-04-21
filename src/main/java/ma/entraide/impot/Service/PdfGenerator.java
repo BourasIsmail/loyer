@@ -17,6 +17,7 @@ import org.apache.commons.lang3.ObjectUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -25,6 +26,45 @@ import java.util.Objects;
 import static ma.entraide.impot.Service.NombreEnLettres.convertir;
 
 public class PdfGenerator {
+    private static final String LOGO_PATH = "/static/images/logo.png";
+
+    /**
+     * Adds the Entraide logo to the document
+     * @param document The PDF document to add the logo to
+     */
+    private static void addLogo(Document document) {
+        try {
+            // Get the logo from classpath resources
+            InputStream logoStream = PdfGenerator.class.getResourceAsStream(LOGO_PATH);
+            if (logoStream != null) {
+                // Read all bytes from the input stream
+                byte[] logoBytes = logoStream.readAllBytes();
+                logoStream.close();
+
+                // Create image from bytes
+                ImageData imgData = ImageDataFactory.create(logoBytes);
+                Image img = new Image(imgData);
+                img.setMarginLeft(80);
+                document.add(img);
+                System.out.println("Logo loaded successfully from classpath: " + LOGO_PATH);
+            } else {
+                // Fallback if image not found in resources
+                document.add(new Paragraph("ENTRAIDE NATIONALE")
+                        .setBold()
+                        .setFontSize(16)
+                        .setTextAlignment(TextAlignment.CENTER));
+                System.out.println("Logo image not found in classpath: " + LOGO_PATH);
+            }
+        } catch (Exception e) {
+            // Log error but continue with PDF generation
+            System.err.println("Failed to load logo image: " + e.getMessage());
+            document.add(new Paragraph("ENTRAIDE NATIONALE")
+                    .setBold()
+                    .setFontSize(16)
+                    .setTextAlignment(TextAlignment.CENTER));
+        }
+    }
+
     public static byte[] generatePdfEtat(List<Paiement> paiements) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         // Create a PDF writer
@@ -40,18 +80,14 @@ public class PdfGenerator {
 
         // Setting font of the text
         PdfFont font = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
-        String logoEntraide = "https://www.entraide.ma/attachements/63ee610678ddb300245a875a-enn.png";
-        ImageData imgData = ImageDataFactory.create(logoEntraide);
 
-        // Creating an Image object
-        Image img = new Image(imgData);
-        // Set the image alignment to center
-        img.setMarginLeft(80);
-        document.add(img);
+        // Add logo
+        addLogo(document);
+
         Paiement pm = paiements.get(0);
         // Generate QR Code
         String qrCodeContent = "ETAT DES LOYERS du mois " + pm.getMoisAnnee() +
-                "\nCOORDINATION DE " + pm.getLocal().getProvince().getRegion().getName() ;
+                "\nCOORDINATION DE " + pm.getLocal().getProvince().getRegion().getName();
         try {
             byte[] qrCodeImage = QRCodeGenerator.generateQRCodeImage(qrCodeContent);
             ImageData qrImageData = ImageDataFactory.create(qrCodeImage);
@@ -61,23 +97,23 @@ public class PdfGenerator {
             qrCode.setHorizontalAlignment(HorizontalAlignment.CENTER);
             document.add(qrCode);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Failed to generate QR code: " + e.getMessage());
         }
 
-        Text t2 = new Text("ETAT DES LOYERS du mois "+pm.getMoisAnnee());
+        Text t2 = new Text("ETAT DES LOYERS du mois " + pm.getMoisAnnee());
         t2.setFont(font);
         Paragraph para1 = new Paragraph(t2);
         para1.setTextAlignment(TextAlignment.CENTER);
         document.add(para1);
 
-        String sousTitre = " COORDINATION DE " +pm.getLocal().getProvince().getRegion().getName();
+        String sousTitre = " COORDINATION DE " + pm.getLocal().getProvince().getRegion().getName();
         Text text = new Text(sousTitre);
         text.setFont(font);
         Paragraph para2 = new Paragraph(text);
         para2.setTextAlignment(TextAlignment.CENTER);
         document.add(para2);
 
-        float [] pointColumnWidths = {200F, 120F, 80, 80F, 80F, 80F};
+        float[] pointColumnWidths = {200F, 120F, 80, 80F, 80F, 80F};
         Table table = new Table(pointColumnWidths);
 
         table.addCell(new Cell().add(new Paragraph("Nom et Prénom")));
@@ -87,10 +123,10 @@ public class PdfGenerator {
         table.addCell(new Cell().add(new Paragraph("RAS")));
         table.addCell(new Cell().add(new Paragraph("Montant Net")));
 
-        double totalNet= 0.00;
+        double totalNet = 0.00;
         double totalBrute = 0.00;
         double totalRas = 0.00;
-        for(Paiement paiement: paiements) {
+        for (Paiement paiement : paiements) {
             if (paiement.getLocal().getEtat().equals("actif")) {
                 totalNet += paiement.getNetMensuel();
                 totalBrute += paiement.getBruteMensuel();
@@ -103,9 +139,9 @@ public class PdfGenerator {
                 table.addCell(new Cell().add(new Paragraph(String.valueOf(nomComplet))));
                 table.addCell(new Cell().add(new Paragraph(String.valueOf(paiement.getLocal().getProvince().getName()))));
                 table.addCell(new Cell().add(new Paragraph(String.valueOf(paiement.getPourcentageRAS()) + " %")));
-                table.addCell(new Cell().add(new Paragraph(String.format("%.2f",paiement.getBruteMensuel()))));
-                table.addCell(new Cell().add(new Paragraph(String.format("%.2f",paiement.getRas()))));
-                table.addCell(new Cell().add(new Paragraph(String.format("%.2f",paiement.getNetMensuel()))));
+                table.addCell(new Cell().add(new Paragraph(String.format("%.2f", paiement.getBruteMensuel()))));
+                table.addCell(new Cell().add(new Paragraph(String.format("%.2f", paiement.getRas()))));
+                table.addCell(new Cell().add(new Paragraph(String.format("%.2f", paiement.getNetMensuel()))));
             }
         }
         table.addCell(new Cell().add(new Paragraph("")));
@@ -118,7 +154,7 @@ public class PdfGenerator {
         document.add(table);
 
         String nombreEnLettre = convertir(totalBrute);
-        Paragraph message = new Paragraph("Arrêté cet état à la somme de: "+nombreEnLettre);
+        Paragraph message = new Paragraph("Arrêté cet état à la somme de: " + nombreEnLettre);
         document.add(message);
 
         document.close();
@@ -135,7 +171,7 @@ public class PdfGenerator {
         String nom = c.getNom();
         int a = 1;
         if (mode.equals("trimestre")) {
-             a = 3;
+            a = 3;
         }
         PdfWriter pdfWriter = new PdfWriter(baos);
 
@@ -149,48 +185,44 @@ public class PdfGenerator {
 
         // Setting font of the text
         PdfFont font = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
-        String logoEntraide = "https://www.entraide.ma/attachements/63ee610678ddb300245a875a-enn.png";
-        ImageData imgData = ImageDataFactory.create(logoEntraide);
 
-        // Creating an Image object
-        Image img = new Image(imgData);
-        // Set the image alignment to center
-        img.setMarginLeft(90);
-        document.add(img);
+        // Add logo
+        addLogo(document);
+
         Paiement pm = paiements.get(0);
         String n = String.valueOf(nOrdre);
 
-        Text t1 = new  Text("Ordre de virement N°"+nOrdre);
+        Text t1 = new Text("Ordre de virement N°" + nOrdre);
         t1.setFont(font);
         Paragraph para1 = new Paragraph(t1);
         document.add(para1);
 
-        Text t2 = new Text("A MONSIEUR LE CHEF DE L'AGENCE BANCAIRE CENTRALE DE "+nom+" Rabat");
+        Text t2 = new Text("A MONSIEUR LE CHEF DE L'AGENCE BANCAIRE CENTRALE DE " + nom + " Rabat");
         t2.setFont(font);
         Paragraph para2 = new Paragraph(t2);
         para2.setTextAlignment(TextAlignment.CENTER);
         document.add(para2);
 
         Text t3 = new Text("J'ai l'honneur de vous demander de bien vouloir faire procéder aux virements, désignés ci-après" +
-                "  par le débit du compte n°\n"+nCompte+"\n ouvert à "+nom+", au nom de l'Entraide " +
-                "Nationale. \n Réglement du loyer du mois de "+pm.getMoisAnnee()+".("+pm.getLocal().getProvince().getRegion().getName()+")\n" +
-                "Veuillez agréer, Monsieur, l'expression de mes salutations distinguées.\n OP "+nOP+" du "+date);
+                "  par le débit du compte n°\n" + nCompte + "\n ouvert à " + nom + ", au nom de l'Entraide " +
+                "Nationale. \n Réglement du loyer du mois de " + pm.getMoisAnnee() + ".(" + pm.getLocal().getProvince().getRegion().getName() + ")\n" +
+                "Veuillez agréer, Monsieur, l'expression de mes salutations distinguées.\n OP " + nOP + " du " + date);
         Paragraph para3 = new Paragraph(t3);
         para3.setTextAlignment(TextAlignment.CENTER);
         document.add(para3);
 
-        float [] pointColumnWidths = {30F,300F,80F, 300F};
+        float[] pointColumnWidths = {30F, 300F, 80F, 300F};
         Table table = new Table(pointColumnWidths);
 
         table.addCell(new Cell().add(new Paragraph("N°")));
         table.addCell(new Cell().add(new Paragraph("Nom et Prénom")));
         table.addCell(new Cell().add(new Paragraph("Montant du loyer")));
         table.addCell(new Cell().add(new Paragraph("RIB")));
-        double totalNet= 0.00;
+        double totalNet = 0.00;
         int i = 1;
-        for(Paiement paiement: paiements) {
+        for (Paiement paiement : paiements) {
             if (paiement.getLocal().getEtat().equals("actif")) {
-                double pa = paiement.getNetMensuel()*a;
+                double pa = paiement.getNetMensuel() * a;
                 totalNet += pa;
                 StringBuilder nomComplet = new StringBuilder();
                 for (Proprietaire p : paiement.getLocal().getProprietaires()) {
@@ -198,7 +230,7 @@ public class PdfGenerator {
                 }
                 table.addCell(new Cell().add(new Paragraph(String.valueOf(i++))));
                 table.addCell(new Cell().add(new Paragraph(String.valueOf(nomComplet))));
-                table.addCell(new Cell().add(new Paragraph(String.format("%.2f",(pa)))));
+                table.addCell(new Cell().add(new Paragraph(String.format("%.2f", (pa)))));
                 table.addCell(new Cell().add(new Paragraph(paiement.getRib())));
             }
         }
@@ -208,16 +240,16 @@ public class PdfGenerator {
         Paragraph paraEspace = new Paragraph(espace);
         document.add(paraEspace);
 
-        float [] pointColumnWidths1 = {100F, 200F};
+        float[] pointColumnWidths1 = {100F, 200F};
         Table table1 = new Table(pointColumnWidths1);
         table1.addCell(new Cell().add(new Paragraph("Total")));
         table1.addCell(new Cell().add(new Paragraph(String.format("%.2f", totalNet))));
         document.add(table1);
 
         String nombreEnLettre = convertir(totalNet);
-        Paragraph message = new Paragraph("Arrêté cet état à la somme de: "+nombreEnLettre);
+        Paragraph message = new Paragraph("Arrêté cet état à la somme de: " + nombreEnLettre);
         document.add(message);
-        Text dateSign = new Text("Rabat le :   "+date);
+        Text dateSign = new Text("Rabat le :   " + date);
         Paragraph paraDateSign = new Paragraph(dateSign);
         paraDateSign.setTextAlignment(TextAlignment.RIGHT);
         document.add(paraDateSign);
@@ -232,14 +264,8 @@ public class PdfGenerator {
         pdfDocument.setDefaultPageSize(PageSize.A3);
         Document document = new Document(pdfDocument);
 
-        String logoEntraide = "https://www.entraide.ma/attachements/63ee610678ddb300245a875a-enn.png";
-        ImageData imgData = ImageDataFactory.create(logoEntraide);
-
-        // Creating an Image object
-        Image img = new Image(imgData);
-        // Set the image alignment to center
-        img.setMarginLeft(80);
-        document.add(img);
+        // Add logo
+        addLogo(document);
 
         // Add title
         Paragraph title = new Paragraph("Etat annuel des retenues effectuées pour le propriétaire  " + proprietaire.getNomComplet() + " - année " + year)
@@ -247,6 +273,7 @@ public class PdfGenerator {
                 .setBold()
                 .setFontSize(16);
         document.add(title);
+
         String qrCodeContent = proprietaire.toString();
         try {
             byte[] qrCodeImage = QRCodeGenerator.generateQRCodeImage(qrCodeContent);
@@ -257,22 +284,24 @@ public class PdfGenerator {
             qrCode.setHorizontalAlignment(HorizontalAlignment.CENTER);
             document.add(qrCode);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Failed to generate QR code: " + e.getMessage());
         }
+
         // Add proprietaire details
         document.add(new Paragraph("Détails du proprietaire :"));
         document.add(new Paragraph("Nom Complet: " + proprietaire.getNomComplet()));
-        if(proprietaire.getCin() != null){
+        if (proprietaire.getCin() != null) {
             document.add(new Paragraph("CIN: " + proprietaire.getCin()));
         }
-        if(proprietaire.getTelephone() != null){
+        if (proprietaire.getTelephone() != null) {
             document.add(new Paragraph("Telephone: " + proprietaire.getTelephone()));
         }
-        if(proprietaire.getAdresse() != null ){
+        if (proprietaire.getAdresse() != null) {
             document.add(new Paragraph("adresse: " + proprietaire.getAdresse()));
         }
+
         // Create table
-        float [] pointColumnWidths1 = {300F, 30F, 30F, 30F, 30F, 200F};
+        float[] pointColumnWidths1 = {300F, 30F, 30F, 30F, 30F, 200F};
         Table table = new Table(pointColumnWidths1);
         table.addHeaderCell("Adresse du Local");
         table.addHeaderCell("Mois");
@@ -287,18 +316,17 @@ public class PdfGenerator {
 
         for (ConfirmedPayment payment : confirmedPayments) {
             Local local = payment.getLocal();
-                    table.addCell(String.valueOf(local.getAdresse()+ " - "+local.getProvince().getName()));
-                    table.addCell(String.valueOf(payment.getMois()));
-                    table.addCell(String.format("%.2f", payment.getMontantBrute()));
-                    table.addCell(String.format("%.2f", payment.getMontantNetPaye()));
-                    table.addCell(String.format("%.2f", payment.getRas()));
-                    table.addCell(payment.getRib());
+            table.addCell(String.valueOf(local.getAdresse() + " - " + local.getProvince().getName()));
+            table.addCell(String.valueOf(payment.getMois()));
+            table.addCell(String.format("%.2f", payment.getMontantBrute()));
+            table.addCell(String.format("%.2f", payment.getMontantNetPaye()));
+            table.addCell(String.format("%.2f", payment.getRas()));
+            table.addCell(payment.getRib());
 
-                    totalGross += payment.getMontantBrute();
-                    totalNet += payment.getMontantNetPaye();
-                    totalRas += payment.getRas();
-
-            }
+            totalGross += payment.getMontantBrute();
+            totalNet += payment.getMontantNetPaye();
+            totalRas += payment.getRas();
+        }
 
         // Add totals
         table.addCell("Total");
@@ -312,9 +340,9 @@ public class PdfGenerator {
 
         // Add summary
         document.add(new Paragraph("Sommaire de l'année " + year + " :"));
-        document.add(new Paragraph("Total montant brut : " + String.format("%.2f", totalGross) +" DH"));
-        document.add(new Paragraph("Total montant net : " + String.format("%.2f", totalNet) +" DH"));
-        document.add(new Paragraph("Total RAS : " + String.format("%.2f", totalRas) +" DH"));
+        document.add(new Paragraph("Total montant brut : " + String.format("%.2f", totalGross) + " DH"));
+        document.add(new Paragraph("Total montant net : " + String.format("%.2f", totalNet) + " DH"));
+        document.add(new Paragraph("Total RAS : " + String.format("%.2f", totalRas) + " DH"));
 
         document.close();
         return baos.toByteArray();
