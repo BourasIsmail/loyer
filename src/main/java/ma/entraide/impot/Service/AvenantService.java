@@ -2,13 +2,18 @@ package ma.entraide.impot.Service;
 
 import ma.entraide.impot.Entity.Avenant;
 import ma.entraide.impot.Entity.Local;
+import ma.entraide.impot.Entity.Paiement;
 import ma.entraide.impot.Repository.AvenantsRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+
+import static ma.entraide.impot.Service.PdfGenerator.generatePdfEtat;
+import static ma.entraide.impot.Service.PdfGenerator.generatePdfEtatAvenant;
 
 @Service
 public class AvenantService {
@@ -52,4 +57,9 @@ public class AvenantService {
         avenantsRepo.delete(a);
         return "deleted";
     }
+
+    public byte[] etatPdf(Avenant avenant) throws IOException {
+        return generatePdfEtatAvenant(avenant);
+    }
+
 }

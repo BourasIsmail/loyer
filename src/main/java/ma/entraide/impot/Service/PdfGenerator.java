@@ -347,4 +347,69 @@ public class PdfGenerator {
         document.close();
         return baos.toByteArray();
     }
+
+    public static byte[] generatePdfEtatAvenant(Avenant avenant) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        // Create a PDF writer
+        PdfWriter pdfWriter = new PdfWriter(baos);
+
+        // Create a PdfDocument object
+        PdfDocument pdfDocument = new PdfDocument(pdfWriter);
+
+        pdfDocument.setDefaultPageSize(PageSize.A3);
+
+        // Create a Document object
+        Document document = new Document(pdfDocument);
+
+        // Setting font of the text
+        PdfFont font = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+
+        // Add logo
+        addLogo(document);
+
+        // Generate QR Code
+        String qrCodeContent = "ETAT D'AVENANT " + avenant.getLocal().getAdresse() +
+                "\nCOORDINATION DE " + avenant.getLocal().getProvince().getRegion().getName();
+        try {
+            byte[] qrCodeImage = QRCodeGenerator.generateQRCodeImage(qrCodeContent);
+            ImageData qrImageData = ImageDataFactory.create(qrCodeImage);
+            Image qrCode = new Image(qrImageData);
+            qrCode.setWidth(100);
+            qrCode.setHeight(100);
+            qrCode.setHorizontalAlignment(HorizontalAlignment.CENTER);
+            document.add(qrCode);
+        } catch (Exception e) {
+            System.err.println("Failed to generate QR code: " + e.getMessage());
+        }
+
+        float[] pointColumnWidths = {200F, 120F, 120F};
+        Table table = new Table(pointColumnWidths);
+
+        table.addCell(new Cell().add(new Paragraph("Nom et Prénom")));
+        table.addCell(new Cell().add(new Paragraph("Délégation")));
+        table.addCell(new Cell().add(new Paragraph("Montant")));
+
+        StringBuilder nomComplet = new StringBuilder();
+        for (Proprietaire p : avenant.getLocal().getProprietaires()) {
+            nomComplet.append(p.getNomComplet()).append(" ");
+        }
+
+        table.addCell(new Cell().add(new Paragraph(String.valueOf(nomComplet))));
+        table.addCell(new Cell().add(new Paragraph(String.valueOf(avenant.getLocal().getProvince().getName()))));
+        table.addCell(new Cell().add(new Paragraph(String.valueOf(avenant.getMontant()) + " DH")));
+
+
+
+
+
+        document.add(table);
+
+        String nombreEnLettre = convertir(avenant.getMontant());
+        Paragraph message = new Paragraph("Arrêté cet état à la somme de: " + nombreEnLettre);
+        document.add(message);
+
+        document.close();
+        return baos.toByteArray();
+    }
+
 }

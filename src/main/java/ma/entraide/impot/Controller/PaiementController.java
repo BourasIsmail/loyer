@@ -1,7 +1,5 @@
 package ma.entraide.impot.Controller;
 
-import lombok.Data;
-import ma.entraide.impot.Entity.Local;
 import ma.entraide.impot.Entity.OvRequest;
 import ma.entraide.impot.Entity.Paiement;
 import ma.entraide.impot.Entity.PayerRequest;
@@ -13,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.List;
 
 @RestController
