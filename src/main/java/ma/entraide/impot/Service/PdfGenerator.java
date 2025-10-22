@@ -87,7 +87,7 @@ public class PdfGenerator {
         Paiement pm = paiements.get(0);
         // Generate QR Code
         String qrCodeContent = "ETAT DES LOYERS du mois " + pm.getMoisAnnee() +
-                "\nCOORDINATION DE " + pm.getLocal().getProvince().getRegion().getName();
+                "\nDIRECTION REGIONALE DE " + pm.getLocal().getProvince().getRegion().getName();
         try {
             byte[] qrCodeImage = QRCodeGenerator.generateQRCodeImage(qrCodeContent);
             ImageData qrImageData = ImageDataFactory.create(qrCodeImage);
@@ -106,7 +106,7 @@ public class PdfGenerator {
         para1.setTextAlignment(TextAlignment.CENTER);
         document.add(para1);
 
-        String sousTitre = " COORDINATION DE " + pm.getLocal().getProvince().getRegion().getName();
+        String sousTitre = " DIRECTION REGIONALE DE " + pm.getLocal().getProvince().getRegion().getName();
         Text text = new Text(sousTitre);
         text.setFont(font);
         Paragraph para2 = new Paragraph(text);
@@ -369,7 +369,7 @@ public class PdfGenerator {
 
         // Generate QR Code
         String qrCodeContent = "ETAT D'AVENANT " + avenant.getLocal().getAdresse() +
-                "\nCOORDINATION DE " + avenant.getLocal().getProvince().getRegion().getName();
+                "\nDIRECTION REGIONALE DE " + avenant.getLocal().getProvince().getRegion().getName();
         try {
             byte[] qrCodeImage = QRCodeGenerator.generateQRCodeImage(qrCodeContent);
             ImageData qrImageData = ImageDataFactory.create(qrCodeImage);
