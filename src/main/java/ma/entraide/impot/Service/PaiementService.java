@@ -65,7 +65,7 @@ public class PaiementService {
 
         //pourcentage ras
         double brutAnnuel = mensuelBrute * 12;
-        int rasP = calcPourcentageRAS(brutAnnuel, isPersonnemoral(local.getProprietaires()), local.getId());
+        int rasP = calcPourcentageRAS(brutAnnuel, isPersonnemoral(local.getProprietaires()), isEntraprise(local.getProprietaires()), local.getId(), localDate);
 
         //montant de ras
         double ras = Math.ceil(calcRAS(mensuelBrute, rasP));
@@ -103,7 +103,7 @@ public class PaiementService {
 
         // Check if a ConfirmedPayment exists for this local and date
         ConfirmedPayment confirmedPayment = confirmedPaymentRepo.findConfirmedPaymentByDateAndLocal(local.getId(), periode);
-
+        System.out.println(confirmedPayment);
         if (confirmedPayment != null) {
             // Use values from ConfirmedPayment
             bruteMensuel = confirmedPayment.getMontantBrute();
@@ -114,11 +114,15 @@ public class PaiementService {
         } else if (local.getEtat().equals("actif") || (local.getEtat().equals("résilié") && local.getModeDePaiement().equals("virement"))) {
             // Calculate values using RASConfig
             double brutAnnuel = bruteMensuel * 12;
-            rasP = calcPourcentageRAS(brutAnnuel, isPersonnemoral(local.getProprietaires()), local.getId());
+            System.out.println(brutAnnuel);
+            rasP = calcPourcentageRAS(brutAnnuel, isPersonnemoral(local.getProprietaires()), isEntraprise(local.getProprietaires()), local.getId(), localDate);
+            System.out.println(rasP);
             ras = Math.ceil(calcRAS(bruteMensuel, rasP));
+            System.out.println(ras);
             mtNet = bruteMensuel - ras;
             rib = local.getRib();
         }
+
 
         return new Paiement(date, month, year, periode, rib, bruteMensuel, rasP, ras, mtNet, local);
     }
@@ -140,12 +144,16 @@ public class PaiementService {
         return generateOV(paiements, nOrdre, nOP, dateCreation, comptePayement, mode);
     }
 
-    public int calcPourcentageRAS(double brutAnnuel, boolean isMoral, Long localId) {
+    public int calcPourcentageRAS(double brutAnnuel, boolean isMoral, boolean isEntreprise, Long localId, LocalDate paymentDate) {
         if (isMoral) {
             return 0;
+        } else if (isEntreprise) {
+            LocalDate cutoff = LocalDate.of(2026, 7, 1);
+            return paymentDate.isBefore(cutoff) ? 0 : 5;
         }
 
         RASConfig config = rasConfigRepo.findFirstByOrderByIdDesc();
+        System.out.println("calcul %"+config);
         if (config == null) {
             throw new ResourceNotFoundException("RAS configuration not found");
         }
@@ -174,6 +182,15 @@ public class PaiementService {
     public boolean isPersonnemoral(List<Proprietaire> proprietaireList) {
         for (Proprietaire proprietaire : proprietaireList) {
             if (proprietaire.getType().equals("personne morale")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isEntraprise(List<Proprietaire> proprietaireList) {
+        for (Proprietaire proprietaire : proprietaireList) {
+            if (proprietaire.getType().equals("entreprise")) {
                 return true;
             }
         }
