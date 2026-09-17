@@ -68,10 +68,19 @@ public class PdfGenerator {
 
     /**
      * Checks whether the given region name corresponds to "Siège Central".
-     * When true, the "DIRECTION REGIONALE DE ..." label should be omitted.
+     * When true, the "DIRECTION REGIONALE DE" prefix should be omitted,
+     * while the region name itself is still shown.
      */
     private static boolean isSiegeCentral(String regionName) {
         return regionName != null && SIEGE_CENTRAL.equalsIgnoreCase(regionName.trim());
+    }
+
+    /**
+     * Builds the region label used in PDFs/QR codes: "DIRECTION REGIONALE DE {region}"
+     * normally, or just "{region}" (e.g. "SIEGE CENTRAL") when the region is Siège Central.
+     */
+    private static String directionRegionaleLabel(String regionName) {
+        return isSiegeCentral(regionName) ? regionName : "DIRECTION REGIONALE DE " + regionName;
     }
 
     public static byte[] generatePdfEtat(List<Paiement> paiements) throws IOException {
@@ -95,11 +104,10 @@ public class PdfGenerator {
 
         Paiement pm = paiements.get(0);
         String regionName = pm.getLocal().getProvince().getRegion().getName();
-        boolean isSiegeCentral = isSiegeCentral(regionName);
 
         // Generate QR Code
         String qrCodeContent = "ETAT DES LOYERS du mois " + pm.getMoisAnnee() +
-                (isSiegeCentral ? "" : "\nDIRECTION REGIONALE DE " + regionName);
+                "\n" + directionRegionaleLabel(regionName);
         try {
             byte[] qrCodeImage = QRCodeGenerator.generateQRCodeImage(qrCodeContent);
             ImageData qrImageData = ImageDataFactory.create(qrCodeImage);
@@ -118,14 +126,12 @@ public class PdfGenerator {
         para1.setTextAlignment(TextAlignment.CENTER);
         document.add(para1);
 
-        if (!isSiegeCentral) {
-            String sousTitre = " DIRECTION REGIONALE DE " + regionName;
-            Text text = new Text(sousTitre);
-            text.setFont(font);
-            Paragraph para2 = new Paragraph(text);
-            para2.setTextAlignment(TextAlignment.CENTER);
-            document.add(para2);
-        }
+        String sousTitre = " " + directionRegionaleLabel(regionName);
+        Text text = new Text(sousTitre);
+        text.setFont(font);
+        Paragraph para2 = new Paragraph(text);
+        para2.setTextAlignment(TextAlignment.CENTER);
+        document.add(para2);
 
         float[] pointColumnWidths = {200F, 120F, 80, 80F, 80F, 80F};
         Table table = new Table(pointColumnWidths);
@@ -206,7 +212,6 @@ public class PdfGenerator {
         Paiement pm = paiements.get(0);
         String n = String.valueOf(nOrdre);
         String regionName = pm.getLocal().getProvince().getRegion().getName();
-        boolean isSiegeCentral = isSiegeCentral(regionName);
 
         Text t1 = new Text("Ordre de virement N°" + nOrdre);
         t1.setFont(font);
@@ -219,10 +224,9 @@ public class PdfGenerator {
         para2.setTextAlignment(TextAlignment.CENTER);
         document.add(para2);
 
-        String regionSuffix = isSiegeCentral ? "" : ".(" + regionName + ")";
         Text t3 = new Text("J'ai l'honneur de vous demander de bien vouloir faire procéder aux virements, désignés ci-après" +
                 "  par le débit du compte n°\n" + nCompte + "\n ouvert à " + nom + ", au nom de l'Entraide " +
-                "Nationale. \n Réglement du loyer du mois de " + pm.getMoisAnnee() + regionSuffix + "\n" +
+                "Nationale. \n Réglement du loyer du mois de " + pm.getMoisAnnee() + ".(" + regionName + ")\n" +
                 "Veuillez agréer, Monsieur, l'expression de mes salutations distinguées.\n OP " + nOP + " du " + date);
         Paragraph para3 = new Paragraph(t3);
         para3.setTextAlignment(TextAlignment.CENTER);
@@ -385,11 +389,10 @@ public class PdfGenerator {
         addLogo(document);
 
         String regionName = avenant.getLocal().getProvince().getRegion().getName();
-        boolean isSiegeCentral = isSiegeCentral(regionName);
 
         // Generate QR Code
         String qrCodeContent = "ETAT D'AVENANT " + avenant.getLocal().getAdresse() +
-                (isSiegeCentral ? "" : "\nDIRECTION REGIONALE DE " + regionName);
+                "\n" + directionRegionaleLabel(regionName);
         try {
             byte[] qrCodeImage = QRCodeGenerator.generateQRCodeImage(qrCodeContent);
             ImageData qrImageData = ImageDataFactory.create(qrCodeImage);
