@@ -16,4 +16,5 @@ public class Rib {
 
     @Column(length = 24)
     private String rib;
+    
 }
